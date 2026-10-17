@@ -12,22 +12,8 @@ export interface Media {
     width: number;
     height: number;
     name: string;
-    /** Discord already draws its own favourite star for GIFs, so ours would overlap it. */
+    /** Discord already draws its own favourite star for GIFs, so the accessory leaves them alone. */
     nativeStar: boolean;
-}
-
-/** Everything the hover star can read from a rendered `<img>` or `<video>`. */
-export interface MediaDescriptor {
-    /** Tag name of the rendered element, `img` or `video`. */
-    tag: string;
-    /** Rendered media URL, usually Discord's signed CDN link. */
-    src?: string | null;
-    /** Preferred URL, such as the full size link behind an image or `data-safe-src`. */
-    safeSrc?: string | null;
-    width?: number | null;
-    height?: number | null;
-    name?: string | null;
-    mime?: string | null;
 }
 
 const IMAGE_EXTENSION = /\.(png|jpe?g|webp|avif|gif|bmp)$/i;
@@ -95,7 +81,7 @@ export function mediaKind(url: string, mime = "", filename = ""): MediaKind | un
     return;
 }
 
-/** GIFs inherit Discord's own favourite star, so the plugin must not draw a second one. */
+/** GIFs inherit Discord's own favourite star, so the accessory must not add another button. */
 export function hasNativeStar(url: string): boolean {
     const parsed = parseUrl(url);
     if (!parsed) return false;
@@ -120,78 +106,11 @@ function dimension(value: unknown, fallback: number): number {
         : fallback;
 }
 
-/**
- * Turns a rendered media element into a favourite entry. URLs that are not media are
- * skipped (an image can sit inside a link to an article), and the tag decides the kind
- * when a CDN link carries no useful extension.
- */
-export function mediaFromDescriptor(descriptor: MediaDescriptor): Media | undefined {
-    const tag = descriptor.tag.toLowerCase();
-    if (tag !== "img" && tag !== "video") return;
-
-    const mime = descriptor.mime ?? "";
-    const name = descriptor.name ?? "";
-    const rendered = safeUrl(descriptor.src);
-    const preferred = safeUrl(descriptor.safeSrc);
-    const candidates = [preferred, rendered].filter((url): url is string => !!url).map(normalizeMediaUrl);
-
-    let url: string | undefined;
-    let kind: MediaKind | undefined;
-    for (const candidate of candidates) {
-        const detected = mediaKind(candidate, mime, name);
-        if (!detected) continue;
-        url = candidate;
-        kind = detected;
-        break;
-    }
-
-    // Nothing recognisable: fall back to what the element itself renders, never to an
-    // unrelated "open in browser" link wrapped around the picture.
-    url ??= rendered ? normalizeMediaUrl(rendered) : candidates[0];
-    if (!url) return;
-    kind ??= tag === "video" ? "video" : "image";
-
-    const fallback = DEFAULT_SIZE[kind];
-    return {
-        url,
-        kind,
-        width: dimension(descriptor.width, fallback.width),
-        height: dimension(descriptor.height, fallback.height),
-        name: fileNameOf(url, descriptor.name),
-        nativeStar: hasNativeStar(url)
-    };
-}
-
-export interface MediaRect {
-    right: number;
-    top: number;
-}
-
-export interface HostRect {
-    left: number;
-    top: number;
-    clientLeft: number;
-    clientTop: number;
-    clientWidth: number;
-    clientHeight: number;
-}
-
-/**
- * Top-right corner of the media, expressed in the containing block's absolute
- * coordinates and kept inside the host so a star is never clipped away.
- */
-export function starOffset(media: MediaRect, host: HostRect, size: number, inset: number): { left: number; top: number; } {
-    const left = media.right - (host.left + host.clientLeft) - size - inset;
-    const top = media.top - (host.top + host.clientTop) + inset;
-    return {
-        left: Math.round(Math.max(2, Math.min(host.clientWidth - size - 2, left))),
-        top: Math.round(Math.max(2, Math.min(host.clientHeight - size - 2, top)))
-    };
-}
-
 export function collectMedia(props: any): Media[] {
     const found = new Map<string, Media>();
     const add = (value: unknown, info: any = {}) => {
+        if (info?.spoiler) return;
+
         const url = safeUrl(value);
         if (!url) return;
         const kind = mediaKind(url, info.content_type ?? info.contentType ?? "", info.filename ?? "");

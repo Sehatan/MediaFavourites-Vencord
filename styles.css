@@ -1,0 +1,36 @@
+.vc-mediafavourites-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    margin-top: 2px;
+}
+
+.vc-mediafavourites-button {
+    min-width: 24px;
+    min-height: 24px;
+    padding: 2px;
+    color: var(--interactive-normal);
+    opacity: 0.65;
+}
+
+.vc-mediafavourites-button:hover {
+    color: var(--interactive-hover);
+    opacity: 1;
+}
+
+.vc-mediafavourites-button:focus-visible {
+    outline: 2px solid var(--brand-experiment, #5865f2);
+    outline-offset: 2px;
+    opacity: 1;
+}
+
+.vc-mediafavourites-button.vc-mediafavourites-saved {
+    color: var(--status-warning, #f0b232);
+    opacity: 1;
+}
+
+.vc-mediafavourites-star {
+    width: 16px;
+    height: 16px;
+}
