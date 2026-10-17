@@ -46,8 +46,6 @@ Save images and videos from Discord chat to your GIF favourites with star button
 6. Open **Settings → Vencord → Plugins** and enable **MediaFavourites**.
 7. Find a message with an image or video and click the star below it, then open **GIFs → Favourites**.
 
-If you previously installed by copying the folder, remove the old copy first so only one copy of the plugin exists in `userplugins`. To update later, run `git pull` inside the cloned folder and rebuild.
-
 More information: [Vencord custom plugins](https://docs.vencord.dev/installing/custom-plugins/).
 
 ## Usage
